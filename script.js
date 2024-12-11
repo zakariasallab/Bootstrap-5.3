@@ -93,50 +93,57 @@ function writeDom() {
     });
 }
 
+
+
 // Fonction qui met à jour le modal pour "Edit"
 function editModal(gameId) {
+    // Trouver le jeu correspondant dans la liste par son ID
     const result = gamesList.find((game) => game.id === parseInt(gameId));
 
     if (result) {
-        // Créer un formulaire pour modifier le jeu
-        const modalBody = `
-            <h4>Edit ${result.title}</h4>
-            <form id="editForm">
-                <div class="mb-3">
-                    <label for="gameTitle" class="form-label">Title</label>
-                    <input type="text" class="form-control" id="gameTitle" value="${result.title}" required>
-                </div>
-                <div class="mb-3">
-                    <label for="gameYear" class="form-label">Year</label>
-                    <input type="number" class="form-control" id="gameYear" value="${result.year}" required>
-                </div>
-                <div class="mb-3">
-                    <label for="gameImageUrl" class="form-label">Image URL</label>
-                    <input type="url" class="form-control" id="gameImageUrl" value="${result.imageUrl}" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Save changes</button>
-            </form>
-        `;
-        modifyModal("Edit Mode", modalBody);
+        // Charger le contenu du formulaire depuis form.html
+        fetch("./form.html")
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error("Failed to load form.html");
+                }
+                return response.text(); // Lire le contenu de form.html
+            })
+            .then((formHtml) => {
+                // Modifier le modal avec le titre et le formulaire récupéré
+                modifyModal("Edit Mode", formHtml);
 
-        // Ajouter un gestionnaire d'événements pour le formulaire
-        document.querySelector("#editForm").addEventListener("submit", (e) => {
-            e.preventDefault();
-            // Récupérer les nouvelles valeurs du formulaire
-            const newTitle = document.querySelector("#gameTitle").value;
-            const newYear = document.querySelector("#gameYear").value;
-            const newImageUrl = document.querySelector("#gameImageUrl").value;
+                // Pré-remplir les champs du formulaire avec les données du jeu
+                document.querySelector("#gameTitle").value = result.title;
+                document.querySelector("#gameYear").value = result.year;
+                document.querySelector("#gameImageUrl").value = result.imageUrl;
 
-            // Mettre à jour le jeu dans la liste
-            result.title = newTitle;
-            result.year = newYear;
-            result.imageUrl = newImageUrl;
+                // Ajouter un gestionnaire d'événements pour le formulaire
+                document.querySelector("#editForm").addEventListener("submit", (e) => {
+                    e.preventDefault(); // Empêcher le rechargement de la page
 
-            // Recharger les cartes après la mise à jour
-            writeDom();
-        });
+                    // Récupérer les nouvelles valeurs du formulaire
+                    const newTitle = document.querySelector("#gameTitle").value;
+                    const newYear = document.querySelector("#gameYear").value;
+                    const newImageUrl = document.querySelector("#gameImageUrl").value;
+
+                    // Mettre à jour le jeu dans la liste
+                    result.title = newTitle;
+                    result.year = newYear;
+                    result.imageUrl = newImageUrl;
+
+                    // Recharger les cartes après la mise à jour
+                    const gameContainer = document.querySelector('.row');
+                    gameContainer.innerHTML = ""; // Réinitialiser le conteneur
+                    writeDom(); // Réécrire les cartes
+                });
+            })
+            .catch((error) => {
+                console.error("Error loading the form:", error);
+            });
     }
 }
+
 
 // Fonction qui met à jour le modal pour "View"
 function viewModal(gameId) {
