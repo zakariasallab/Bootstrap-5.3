@@ -93,9 +93,8 @@ function writeDom() {
     });
 }
 
-
-
 // Fonction qui met à jour le modal pour "Edit"
+
 function editModal(gameId) {
     // Trouver le jeu correspondant dans la liste par son ID
     const result = gamesList.find((game) => game.id === parseInt(gameId));
@@ -118,10 +117,17 @@ function editModal(gameId) {
                 document.querySelector("#gameYear").value = result.year;
                 document.querySelector("#gameImageUrl").value = result.imageUrl;
 
-                // Ajouter un gestionnaire d'événements pour le formulaire
-                document.querySelector("#editForm").addEventListener("submit", (e) => {
-                    e.preventDefault(); // Empêcher le rechargement de la page
+                // Ajouter un seul bouton de soumission dans le pied de page du modal
+                const footer = document.querySelector(".modal-footer");
+                footer.innerHTML = `
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Close
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="saveChangesButton">Submit</button>
+                `;
 
+                // Ajouter un gestionnaire d'événements pour le bouton "Submit"
+                document.querySelector("#saveChangesButton").addEventListener("click", (e) => {
                     // Récupérer les nouvelles valeurs du formulaire
                     const newTitle = document.querySelector("#gameTitle").value;
                     const newYear = document.querySelector("#gameYear").value;
@@ -136,6 +142,10 @@ function editModal(gameId) {
                     const gameContainer = document.querySelector('.row');
                     gameContainer.innerHTML = ""; // Réinitialiser le conteneur
                     writeDom(); // Réécrire les cartes
+
+                    // Fermer le modal après avoir sauvegardé les modifications
+                    const modal = bootstrap.Modal.getInstance(document.getElementById("exampleModal"));
+                    modal.hide();
                 });
             })
             .catch((error) => {
@@ -148,17 +158,57 @@ function editModal(gameId) {
 // Fonction qui met à jour le modal pour "View"
 function viewModal(gameId) {
     const result = gamesList.find((game) => game.id === parseInt(gameId));
-
+    
     if (result) {
-        // Mettre à jour le modal pour afficher l'image du jeu
         const modalBody = `<img src="${result.imageUrl}" alt="${result.title}" class="img-fluid" />`;
         modifyModal(result.title, modalBody);
+        
+        // Modifier le footer
+        document.querySelector(".modal-footer").innerHTML = `
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                Close
+            </button>
+        `;
+    } else {
+        console.error("Game not found");
+    }
+}
+
+function updateGames(title, year, imageUrl, gameId) {
+    const index = gamesList.findIndex((game) => game.id === parseInt(gameId));
+    
+    if (index !== -1) {
+        gamesList[index].title = title;
+        gamesList[index].year = year;
+        gamesList[index].imageUrl = imageUrl;
+        
+        document.querySelector(".row").innerHTML = ""; // Réinitialiser les cartes dans le DOM
+        writeDom(); // Réécrire les cartes
+        
+        // Réajuster les événements sur les boutons après la mise à jour
+        const editButtons = document.querySelectorAll(".edit");
+        editButtons.forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+                editModal(e.target.getAttribute("data-edit-id"));
+            });
+        });
+
+        const viewButtons = document.querySelectorAll(".view");
+        viewButtons.forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+                viewModal(e.target.getAttribute("data-edit-id"));
+            });
+        });
+    } else {
+        console.error("Game not found");
     }
 }
 
 // Fonction pour modifier le contenu du modal
 function modifyModal(modalTitle, modalBody) {
+    // Écrire le nom du jeu dans le titre du modal
     document.querySelector(".modal-title").textContent = modalTitle;
+    // Écrire dans le corps du modal
     document.querySelector(".modal-body").innerHTML = modalBody;
 }
 
